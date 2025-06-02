@@ -68,4 +68,4 @@ MIT License
 
 ## 作者
 
-[Your Name] 
+Taiga Bando 
