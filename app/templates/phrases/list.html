@@ -1,0 +1,171 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="phrases-container">
+    <div class="phrases-header">
+        <h1>フレーズ一覧</h1>
+        <div class="header-actions">
+            <a href="{{ url_for('main.memorize') }}" class="btn-secondary">暗記モード</a>
+            <a href="{{ url_for('main.add_phrase') }}" class="btn-primary">新規追加</a>
+        </div>
+    </div>
+    
+    {% if phrases %}
+        <div class="phrases-grid">
+            {% for phrase in phrases %}
+                <div class="phrase-card">
+                    <div class="phrase-content">
+                        <div class="phrase-text">{{ phrase.english }}</div>
+                        <div class="phrase-meaning">{{ phrase.japanese }}</div>
+                        {% if phrase.example %}
+                            <div class="phrase-example">
+                                <strong>例文:</strong> {{ phrase.example }}
+                            </div>
+                        {% endif %}
+                        {% if phrase.note %}
+                            <div class="phrase-note">
+                                <strong>メモ:</strong> {{ phrase.note }}
+                            </div>
+                        {% endif %}
+                    </div>
+                    <div class="phrase-meta">
+                        <span class="phrase-date">{{ phrase.created_at.strftime('%Y/%m/%d') }}</span>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+    {% else %}
+        <div class="no-phrases">
+            <p>まだフレーズが登録されていません。</p>
+            <a href="{{ url_for('main.add_phrase') }}" class="btn-primary">フレーズを追加する</a>
+        </div>
+    {% endif %}
+</div>
+
+<style>
+.phrases-container {
+    max-width: 1200px;
+    margin: 2rem auto;
+    padding: 0 1rem;
+}
+
+.phrases-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 2rem;
+}
+
+.phrases-header h1 {
+    margin: 0;
+}
+
+.header-actions {
+    display: flex;
+    gap: 1rem;
+}
+
+.btn-primary,
+.btn-secondary {
+    display: inline-block;
+    padding: 0.75rem 1.5rem;
+    text-decoration: none;
+    border-radius: 4px;
+    transition: background-color 0.3s;
+}
+
+.btn-primary {
+    background-color: #4a90e2;
+    color: white;
+}
+
+.btn-primary:hover {
+    background-color: #357abd;
+}
+
+.btn-secondary {
+    background-color: #6c757d;
+    color: white;
+}
+
+.btn-secondary:hover {
+    background-color: #5a6268;
+}
+
+.phrases-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 1.5rem;
+}
+
+.phrase-card {
+    background: white;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    padding: 1.5rem;
+}
+
+.phrase-content {
+    margin-bottom: 1rem;
+}
+
+.phrase-text {
+    font-size: 1.2rem;
+    font-weight: 500;
+    color: #4a90e2;
+    margin-bottom: 0.5rem;
+}
+
+.phrase-meaning {
+    color: #333;
+    margin-bottom: 1rem;
+}
+
+.phrase-example,
+.phrase-note {
+    font-size: 0.9rem;
+    color: #666;
+    margin-top: 0.5rem;
+}
+
+.phrase-meta {
+    padding-top: 1rem;
+    border-top: 1px solid #eee;
+    text-align: right;
+}
+
+.phrase-date {
+    font-size: 0.9rem;
+    color: #999;
+}
+
+.no-phrases {
+    text-align: center;
+    padding: 3rem;
+    background: white;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.no-phrases p {
+    margin-bottom: 1.5rem;
+    color: #666;
+}
+
+@media (max-width: 768px) {
+    .phrases-header {
+        flex-direction: column;
+        gap: 1rem;
+        text-align: center;
+    }
+    
+    .header-actions {
+        justify-content: center;
+    }
+    
+    .phrases-grid {
+        grid-template-columns: 1fr;
+    }
+}
+</style>
+{% endblock %} 

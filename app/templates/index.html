@@ -2,109 +2,119 @@
 
 {% block content %}
 <div class="home-container">
-    <header class="welcome-section">
-        <h1>英語フレーズ暗記アプリ</h1>
-        <p class="subtitle">効率的に英語フレーズを学習・管理できます</p>
-    </header>
-
-    <div class="quick-actions">
-        <a href="{{ url_for('main.add_phrase') }}" class="action-card">
-            <div class="action-icon">📝</div>
-            <h3>フレーズを追加</h3>
-            <p>新しい英語フレーズを登録</p>
-        </a>
-        <a href="{{ url_for('main.memorize') }}" class="action-card">
-            <div class="action-icon">🎯</div>
-            <h3>暗記モード</h3>
-            <p>登録したフレーズを練習</p>
-        </a>
-        <a href="{{ url_for('main.list_phrases') }}" class="action-card">
-            <div class="action-icon">📚</div>
-            <h3>フレーズ一覧</h3>
-            <p>登録済みフレーズを確認</p>
-        </a>
-    </div>
-
-    <div class="dashboard-grid">
-        <section class="recent-phrases">
-            <h2>最近追加したフレーズ</h2>
-            {% if recent_phrases %}
-            <div class="phrase-list">
-                {% for phrase in recent_phrases %}
-                <div class="phrase-item">
-                    <div class="phrase-text">{{ phrase.phrase }}</div>
-                    <div class="phrase-meaning">{{ phrase.meaning }}</div>
-                </div>
-                {% endfor %}
-            </div>
-            {% else %}
-            <p class="no-items">まだフレーズが登録されていません</p>
-            {% endif %}
-        </section>
-
-        <section class="stats-section">
-            <h2>学習状況</h2>
-            <div class="stats-grid">
-                <div class="stat-card">
-                    <div class="stat-number">{{ total_phrases }}</div>
-                    <div class="stat-label">登録フレーズ数</div>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-number">0</div>
-                    <div class="stat-label">覚えたフレーズ</div>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-number">0</div>
-                    <div class="stat-label">習得率</div>
-                </div>
-            </div>
-        </section>
-    </div>
-
-    <section class="usage-guide">
-        <h2>使い方ガイド</h2>
-        <div class="guide-steps">
-            <div class="guide-step">
-                <div class="step-number">1</div>
-                <h3>フレーズを登録</h3>
-                <p>覚えたい英語フレーズを登録します。ChatGPTが自動で意味と例文を提案します。</p>
-            </div>
-            <div class="guide-step">
-                <div class="step-number">2</div>
-                <h3>暗記モードで練習</h3>
-                <p>カードをめくるように、フレーズと意味を確認しながら学習できます。</p>
-            </div>
-            <div class="guide-step">
-                <div class="step-number">3</div>
-                <h3>進捗を管理</h3>
-                <p>覚えたフレーズをマークして、学習の進捗を確認できます。</p>
+    {% if current_user.is_authenticated %}
+        <div class="welcome-section">
+            <h1>ようこそ、{{ current_user.username }}さん</h1>
+            <div class="quick-actions">
+                <a href="{{ url_for('main.add_phrase') }}" class="action-button">
+                    <span class="icon">📝</span>
+                    フレーズを追加
+                </a>
+                <a href="{{ url_for('main.memorize') }}" class="action-button highlight">
+                    <span class="icon">🔄</span>
+                    暗記モード
+                </a>
+                <a href="{{ url_for('quiz.quiz_home') }}" class="action-button">
+                    <span class="icon">✍️</span>
+                    クイズに挑戦
+                </a>
             </div>
         </div>
-    </section>
-</div>
 
-<script>
-document.addEventListener('DOMContentLoaded', function() {
-    // LocalStorageから覚えたフレーズの情報を取得
-    const STORAGE_KEY = 'memorized_phrases';
-    const memorizedPhrases = new Set(JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]'));
-    
-    // 統計情報を更新
-    const memorizedCount = memorizedPhrases.size;
-    const totalCount = parseInt("{{ total_phrases }}");
-    const rate = totalCount > 0 ? Math.round((memorizedCount / totalCount) * 100) : 0;
-    
-    // DOMを更新
-    document.querySelector('.stat-card:nth-child(2) .stat-number').textContent = memorizedCount;
-    document.querySelector('.stat-card:nth-child(3) .stat-number').textContent = rate;
-});
-</script>
+        <div class="stats-grid">
+            <div class="stat-card">
+                <h3>今日の学習</h3>
+                <div class="stat-value">{{ phrases_reviewed_today }}</div>
+                <div class="stat-label">フレーズを復習</div>
+            </div>
+            
+            <div class="stat-card">
+                <h3>総フレーズ数</h3>
+                <div class="stat-value">{{ total_phrases }}</div>
+                <div class="stat-label">登録済み</div>
+            </div>
+            
+            <div class="stat-card">
+                <h3>暗記進捗</h3>
+                <div class="stat-value">{{ memorization_rate }}%</div>
+                <div class="stat-label">{{ memorized_phrases }}/{{ total_phrases }}フレーズ</div>
+            </div>
+        </div>
+
+        <div class="phrases-section">
+            <div class="phrases-grid">
+                <div class="phrases-card">
+                    <h3>最近追加したフレーズ</h3>
+                    {% if recent_phrases %}
+                        <ul class="phrases-list">
+                            {% for phrase in recent_phrases %}
+                                <li>
+                                    <div class="phrase-text">{{ phrase.english }}</div>
+                                    <div class="phrase-meaning">{{ phrase.japanese }}</div>
+                                </li>
+                            {% endfor %}
+                        </ul>
+                    {% else %}
+                        <p class="empty-message">まだフレーズが登録されていません</p>
+                    {% endif %}
+                </div>
+
+                <div class="phrases-card">
+                    <h3>最近復習したフレーズ</h3>
+                    {% if recently_reviewed %}
+                        <ul class="phrases-list">
+                            {% for phrase in recently_reviewed %}
+                                <li>
+                                    <div class="phrase-text">{{ phrase.english }}</div>
+                                    <div class="phrase-meaning">{{ phrase.japanese }}</div>
+                                    <div class="review-date">
+                                        {{ phrase.last_reviewed_at.strftime('%Y/%m/%d %H:%M') }}
+                                    </div>
+                                </li>
+                            {% endfor %}
+                        </ul>
+                    {% else %}
+                        <p class="empty-message">まだ復習していません</p>
+                    {% endif %}
+                </div>
+
+                <div class="phrases-card highlight">
+                    <h3>未暗記のフレーズ</h3>
+                    {% if unmemorized_phrases %}
+                        <ul class="phrases-list">
+                            {% for phrase in unmemorized_phrases %}
+                                <li>
+                                    <div class="phrase-text">{{ phrase.english }}</div>
+                                    <div class="phrase-meaning">{{ phrase.japanese }}</div>
+                                </li>
+                            {% endfor %}
+                        </ul>
+                        <a href="{{ url_for('main.memorize') }}?unmemorized=true" class="start-memorize-btn">
+                            これらを復習する
+                        </a>
+                    {% else %}
+                        <p class="empty-message">未暗記のフレーズはありません！</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    {% else %}
+        <div class="welcome-section guest">
+            <h1>PhraseMemo へようこそ</h1>
+            <p>効率的に英語フレーズを暗記できるアプリです</p>
+            <div class="auth-buttons">
+                <a href="{{ url_for('auth.login') }}" class="btn-primary">ログイン</a>
+                <a href="{{ url_for('auth.register') }}" class="btn-secondary">新規登録</a>
+            </div>
+        </div>
+    {% endif %}
+</div>
 
 <style>
 .home-container {
     max-width: 1200px;
     margin: 0 auto;
-    padding: 20px;
+    padding: 2rem 1rem;
 }
 
 .welcome-section {
@@ -113,170 +123,201 @@ document.addEventListener('DOMContentLoaded', function() {
 }
 
 .welcome-section h1 {
-    font-size: 2.5em;
-    color: #2c3e50;
-    margin-bottom: 0.5rem;
-}
-
-.subtitle {
-    font-size: 1.2em;
-    color: #666;
+    margin-bottom: 2rem;
+    color: #333;
 }
 
 .quick-actions {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-    gap: 20px;
-    margin-bottom: 3rem;
+    display: flex;
+    gap: 1rem;
+    justify-content: center;
+    flex-wrap: wrap;
 }
 
-.action-card {
-    background: white;
-    padding: 25px;
-    border-radius: 12px;
-    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-    text-decoration: none;
-    color: inherit;
-    transition: transform 0.3s ease, box-shadow 0.3s ease;
-    text-align: center;
-}
-
-.action-card:hover {
-    transform: translateY(-5px);
-    box-shadow: 0 6px 12px rgba(0,0,0,0.15);
-}
-
-.action-icon {
-    font-size: 2.5em;
-    margin-bottom: 15px;
-}
-
-.action-card h3 {
-    margin: 0 0 10px 0;
-    color: #2c3e50;
-}
-
-.action-card p {
-    margin: 0;
-    color: #666;
-}
-
-.dashboard-grid {
-    display: grid;
-    grid-template-columns: 3fr 2fr;
-    gap: 30px;
-    margin-bottom: 3rem;
-}
-
-.recent-phrases, .stats-section {
-    background: white;
-    padding: 25px;
-    border-radius: 12px;
-    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-}
-
-.phrase-list {
+.action-button {
     display: flex;
     flex-direction: column;
-    gap: 15px;
-}
-
-.phrase-item {
-    padding: 15px;
-    background: #f8f9fa;
+    align-items: center;
+    padding: 1rem;
+    background: white;
     border-radius: 8px;
+    text-decoration: none;
+    color: #333;
+    min-width: 120px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    transition: all 0.3s;
 }
 
-.phrase-text {
-    font-weight: bold;
-    color: #2c3e50;
-    margin-bottom: 5px;
+.action-button:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
 }
 
-.phrase-meaning {
-    color: #666;
-    font-size: 0.9em;
+.action-button.highlight {
+    background: #4a90e2;
+    color: white;
+}
+
+.action-button .icon {
+    font-size: 2rem;
+    margin-bottom: 0.5rem;
 }
 
 .stats-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
-    gap: 15px;
-    margin-top: 20px;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 1.5rem;
+    margin-bottom: 3rem;
 }
 
 .stat-card {
-    text-align: center;
-    padding: 15px;
-    background: #f8f9fa;
+    background: white;
+    padding: 1.5rem;
     border-radius: 8px;
+    text-align: center;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
-.stat-number {
-    font-size: 1.8em;
+.stat-card h3 {
+    color: #666;
+    margin-bottom: 1rem;
+    font-size: 1rem;
+}
+
+.stat-value {
+    font-size: 2rem;
     font-weight: bold;
-    color: #2c3e50;
-    margin-bottom: 5px;
+    color: #4a90e2;
+    margin-bottom: 0.5rem;
 }
 
 .stat-label {
     color: #666;
-    font-size: 0.9em;
+    font-size: 0.9rem;
 }
 
-.usage-guide {
-    background: white;
-    padding: 25px;
-    border-radius: 12px;
-    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-}
-
-.guide-steps {
+.phrases-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-    gap: 20px;
-    margin-top: 20px;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 1.5rem;
 }
 
-.guide-step {
-    text-align: center;
-    padding: 20px;
-    background: #f8f9fa;
+.phrases-card {
+    background: white;
+    padding: 1.5rem;
     border-radius: 8px;
-    position: relative;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
-.step-number {
-    width: 30px;
-    height: 30px;
-    background: #2c3e50;
-    color: white;
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    margin: 0 auto 15px;
+.phrases-card h3 {
+    margin-bottom: 1rem;
+    color: #333;
+    font-size: 1.2rem;
 }
 
-.no-items {
-    text-align: center;
-    padding: 20px;
+.phrases-card.highlight {
+    border: 2px solid #4a90e2;
+}
+
+.phrases-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.phrases-list li {
+    padding: 1rem;
+    border-bottom: 1px solid #eee;
+}
+
+.phrases-list li:last-child {
+    border-bottom: none;
+}
+
+.phrase-text {
+    color: #4a90e2;
+    font-weight: 500;
+    margin-bottom: 0.25rem;
+}
+
+.phrase-meaning {
     color: #666;
-    background: #f8f9fa;
-    border-radius: 8px;
+    font-size: 0.9rem;
+}
+
+.review-date {
+    font-size: 0.8rem;
+    color: #999;
+    margin-top: 0.25rem;
+}
+
+.empty-message {
+    color: #666;
+    text-align: center;
+    padding: 2rem 0;
+}
+
+.start-memorize-btn {
+    display: block;
+    text-align: center;
+    margin-top: 1rem;
+    padding: 0.75rem;
+    background: #4a90e2;
+    color: white;
+    text-decoration: none;
+    border-radius: 4px;
+    transition: background-color 0.3s;
+}
+
+.start-memorize-btn:hover {
+    background: #357abd;
+}
+
+.welcome-section.guest {
+    padding: 4rem 0;
+}
+
+.welcome-section.guest p {
+    margin-bottom: 2rem;
+    color: #666;
+    font-size: 1.2rem;
+}
+
+.auth-buttons {
+    display: flex;
+    gap: 1rem;
+    justify-content: center;
+}
+
+.auth-buttons a {
+    padding: 0.75rem 2rem;
+    border-radius: 4px;
+    text-decoration: none;
+    font-weight: 500;
+}
+
+.btn-primary {
+    background: #4a90e2;
+    color: white;
+}
+
+.btn-secondary {
+    background: #6c757d;
+    color: white;
 }
 
 @media (max-width: 768px) {
-    .dashboard-grid {
+    .stats-grid {
         grid-template-columns: 1fr;
     }
     
-    .welcome-section h1 {
-        font-size: 2em;
+    .phrases-grid {
+        grid-template-columns: 1fr;
     }
     
-    .action-card {
-        padding: 20px;
+    .action-button {
+        flex: 1;
+        min-width: 100px;
     }
 }
 </style>

@@ -1,0 +1,330 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="memorize-container">
+    <div class="controls">
+        <div class="progress">
+            <span id="current-index">0</span>/<span id="total-count">0</span>
+        </div>
+        <div class="buttons">
+            <button id="prev-btn" class="btn-secondary" disabled>前へ</button>
+            <button id="flip-btn" class="btn-primary">めくる</button>
+            <button id="next-btn" class="btn-secondary" disabled>次へ</button>
+        </div>
+        <div class="memorization-controls">
+            <button id="not-memorized-btn" class="btn-warning">まだ</button>
+            <button id="memorized-btn" class="btn-success">覚えた！</button>
+        </div>
+        <div class="filter-controls">
+            <label>
+                <input type="checkbox" id="unmemorized-only"> 未暗記のフレーズのみ表示
+            </label>
+        </div>
+    </div>
+
+    <div class="flashcard">
+        <div class="card" id="card">
+            <div class="card-front">
+                <div class="card-content">
+                    <div class="phrase-text" id="front-text"></div>
+                    <div class="memorization-status" id="front-status"></div>
+                </div>
+            </div>
+            <div class="card-back">
+                <div class="card-content">
+                    <div class="phrase-text" id="back-text"></div>
+                    <div class="example-text" id="example-text"></div>
+                    <div class="memorization-status" id="back-status"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.memorize-container {
+    max-width: 800px;
+    margin: 2rem auto;
+    padding: 0 1rem;
+}
+
+.controls {
+    text-align: center;
+    margin-bottom: 2rem;
+}
+
+.progress {
+    font-size: 1.2rem;
+    margin-bottom: 1rem;
+}
+
+.buttons {
+    display: flex;
+    gap: 1rem;
+    justify-content: center;
+    margin-bottom: 1rem;
+}
+
+.memorization-controls {
+    display: flex;
+    gap: 1rem;
+    justify-content: center;
+    margin-bottom: 1rem;
+}
+
+.filter-controls {
+    margin-top: 1rem;
+    color: #666;
+}
+
+.btn-primary,
+.btn-secondary,
+.btn-success,
+.btn-warning {
+    padding: 0.75rem 1.5rem;
+    border: none;
+    border-radius: 4px;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: all 0.3s;
+}
+
+.btn-primary {
+    background-color: #4a90e2;
+    color: white;
+}
+
+.btn-primary:hover:not(:disabled) {
+    background-color: #357abd;
+}
+
+.btn-secondary {
+    background-color: #6c757d;
+    color: white;
+}
+
+.btn-secondary:hover:not(:disabled) {
+    background-color: #5a6268;
+}
+
+.btn-success {
+    background-color: #28a745;
+    color: white;
+}
+
+.btn-success:hover {
+    background-color: #218838;
+}
+
+.btn-warning {
+    background-color: #ffc107;
+    color: #000;
+}
+
+.btn-warning:hover {
+    background-color: #e0a800;
+}
+
+button:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.flashcard {
+    perspective: 1000px;
+    margin: 0 auto;
+    width: 100%;
+    max-width: 600px;
+    height: 400px;
+}
+
+.card {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    transform-style: preserve-3d;
+    transition: transform 0.6s;
+    cursor: pointer;
+}
+
+.card.flipped {
+    transform: rotateY(180deg);
+}
+
+.card-front,
+.card-back {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    backface-visibility: hidden;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: white;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    padding: 2rem;
+}
+
+.card-back {
+    transform: rotateY(180deg);
+}
+
+.card-content {
+    text-align: center;
+}
+
+.phrase-text {
+    font-size: 1.5rem;
+    margin-bottom: 1rem;
+}
+
+.example-text {
+    font-size: 1rem;
+    color: #666;
+    font-style: italic;
+    margin-bottom: 1rem;
+}
+
+.memorization-status {
+    font-size: 0.9rem;
+    color: #666;
+}
+
+.memorization-status.memorized {
+    color: #28a745;
+}
+
+.memorization-status.not-memorized {
+    color: #ffc107;
+}
+
+@media (max-width: 768px) {
+    .flashcard {
+        height: 300px;
+    }
+    
+    .phrase-text {
+        font-size: 1.2rem;
+    }
+}
+</style>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    let phrases = [];
+    let currentIndex = -1;
+    const card = document.getElementById('card');
+    const flipBtn = document.getElementById('flip-btn');
+    const prevBtn = document.getElementById('prev-btn');
+    const nextBtn = document.getElementById('next-btn');
+    const memorizedBtn = document.getElementById('memorized-btn');
+    const notMemorizedBtn = document.getElementById('not-memorized-btn');
+    const unmemorizedOnlyCheckbox = document.getElementById('unmemorized-only');
+    
+    function loadPhrases() {
+        const unmemorizedOnly = unmemorizedOnlyCheckbox.checked;
+        fetch(`/api/phrases/random?count=10&unmemorized=${unmemorizedOnly}`)
+            .then(response => response.json())
+            .then(data => {
+                phrases = data;
+                if (phrases.length > 0) {
+                    currentIndex = 0;
+                    updateCard();
+                    updateControls();
+                }
+            });
+    }
+    
+    // フレーズを初期読み込み
+    loadPhrases();
+    
+    // カードをめくる
+    function flipCard() {
+        card.classList.toggle('flipped');
+    }
+    
+    // 暗記状態を更新
+    function updateMemorizationStatus(isMemorized) {
+        const phrase = phrases[currentIndex];
+        fetch(`/api/phrases/${phrase.id}/memorization`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ is_memorized: isMemorized })
+        })
+        .then(response => response.json())
+        .then(data => {
+            phrases[currentIndex].is_memorized = data.is_memorized;
+            updateCard();
+        });
+    }
+    
+    // カードの内容を更新
+    function updateCard() {
+        if (currentIndex >= 0 && currentIndex < phrases.length) {
+            const phrase = phrases[currentIndex];
+            document.getElementById('front-text').textContent = phrase.english;
+            document.getElementById('back-text').textContent = phrase.japanese;
+            document.getElementById('example-text').textContent = phrase.example || '';
+            
+            const statusText = phrase.is_memorized ? '✓ 暗記済み' : '未暗記';
+            const statusClass = phrase.is_memorized ? 'memorized' : 'not-memorized';
+            
+            const frontStatus = document.getElementById('front-status');
+            const backStatus = document.getElementById('back-status');
+            frontStatus.textContent = statusText;
+            backStatus.textContent = statusText;
+            frontStatus.className = `memorization-status ${statusClass}`;
+            backStatus.className = `memorization-status ${statusClass}`;
+            
+            document.getElementById('current-index').textContent = currentIndex + 1;
+            document.getElementById('total-count').textContent = phrases.length;
+            
+            card.classList.remove('flipped');
+        }
+    }
+    
+    // コントロールの状態を更新
+    function updateControls() {
+        prevBtn.disabled = currentIndex <= 0;
+        nextBtn.disabled = currentIndex >= phrases.length - 1;
+    }
+    
+    // イベントリスナーを設定
+    flipBtn.addEventListener('click', flipCard);
+    card.addEventListener('click', flipCard);
+    
+    prevBtn.addEventListener('click', function() {
+        if (currentIndex > 0) {
+            currentIndex--;
+            updateCard();
+            updateControls();
+        }
+    });
+    
+    nextBtn.addEventListener('click', function() {
+        if (currentIndex < phrases.length - 1) {
+            currentIndex++;
+            updateCard();
+            updateControls();
+        }
+    });
+    
+    memorizedBtn.addEventListener('click', function() {
+        if (currentIndex >= 0 && currentIndex < phrases.length) {
+            updateMemorizationStatus(true);
+        }
+    });
+    
+    notMemorizedBtn.addEventListener('click', function() {
+        if (currentIndex >= 0 && currentIndex < phrases.length) {
+            updateMemorizationStatus(false);
+        }
+    });
+    
+    unmemorizedOnlyCheckbox.addEventListener('change', loadPhrases);
+});
+</script>
+{% endblock %} 
