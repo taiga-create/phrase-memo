@@ -1,0 +1,251 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="memorize-container">
+    <h2>暗記モード</h2>
+
+    <div class="control-panel">
+        <div class="display-mode">
+            <label>表示モード：</label>
+            <select id="displayMode" onchange="updateDisplayMode()">
+                <option value="phrase">英語のみ</option>
+                <option value="meaning">意味のみ</option>
+                <option value="example">例文のみ</option>
+                <option value="example_meaning">例文の訳のみ</option>
+            </select>
+        </div>
+    </div>
+
+    <div class="cards-container">
+        {% for p in phrases %}
+        <div class="card memorize-item" 
+             data-phrase="{{ p.phrase }}" 
+             data-meaning="{{ p.meaning }}" 
+             data-example="{{ p.example }}" 
+             data-example-meaning="{{ p.example_meaning }}"
+             data-id="{{ p.id }}">
+            <div class="card-inner">
+                <div class="card-front" onclick="toggleReveal(this)">
+                    <div class="main-text">クリックで表示</div>
+                </div>
+                <div class="reveal-text"></div>
+            </div>
+            <div class="memory-status">
+                <button onclick="toggleMemoryStatus(this)" class="memory-status-btn">
+                    未習得
+                </button>
+            </div>
+        </div>
+        {% else %}
+        <p class="no-phrases">暗記用のフレーズがまだ登録されていません。</p>
+        {% endfor %}
+    </div>
+</div>
+
+<style>
+.memorize-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 20px;
+}
+
+.control-panel {
+    background-color: #f8f9fa;
+    padding: 1em;
+    border-radius: 8px;
+    margin-bottom: 2em;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.display-mode select {
+    padding: 8px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-size: 16px;
+    background-color: white;
+}
+
+.cards-container {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 20px;
+    padding: 10px;
+}
+
+.card {
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+    padding: 20px;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    position: relative;
+}
+
+.card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 6px 12px rgba(0,0,0,0.15);
+}
+
+.card-inner {
+    min-height: 150px;
+    display: flex;
+    flex-direction: column;
+}
+
+.card-front {
+    flex-grow: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    padding: 20px;
+    border-radius: 8px;
+    background-color: #f8f9fa;
+    margin-bottom: 10px;
+}
+
+.main-text {
+    font-size: 1.2em;
+    color: #333;
+    text-align: center;
+    line-height: 1.4;
+}
+
+.reveal-text {
+    display: none;
+    padding: 15px;
+    margin-top: 10px;
+    background-color: #e9ecef;
+    border-radius: 8px;
+    color: #495057;
+    font-size: 1.1em;
+    line-height: 1.4;
+}
+
+.memory-status {
+    margin-top: 15px;
+    text-align: right;
+}
+
+.memory-status-btn {
+    padding: 8px 16px;
+    border: none;
+    border-radius: 20px;
+    background-color: #e9ecef;
+    color: #495057;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    font-size: 0.9em;
+}
+
+.memory-status-btn.memorized {
+    background-color: #28a745;
+    color: white;
+}
+
+.no-phrases {
+    grid-column: 1 / -1;
+    text-align: center;
+    padding: 40px;
+    background-color: #f8f9fa;
+    border-radius: 8px;
+    color: #6c757d;
+    font-size: 1.1em;
+}
+
+@media (max-width: 768px) {
+    .cards-container {
+        grid-template-columns: 1fr;
+    }
+    
+    .card {
+        margin: 10px 0;
+    }
+}
+</style>
+
+<script>
+    // メモリーステータスの管理
+    const STORAGE_KEY = 'memorized_phrases';
+    let memorizedPhrases = new Set(JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]'));
+
+    function updateMemoryStatus() {
+        document.querySelectorAll('.memorize-item').forEach(item => {
+            const button = item.querySelector('.memory-status-btn');
+            const phraseId = item.dataset.id;
+            if (memorizedPhrases.has(phraseId)) {
+                button.textContent = '覚えた✓';
+                button.classList.add('memorized');
+            } else {
+                button.textContent = '未習得';
+                button.classList.remove('memorized');
+            }
+        });
+    }
+
+    function toggleMemoryStatus(button) {
+        const item = button.closest('.memorize-item');
+        const phraseId = item.dataset.id;
+        
+        if (memorizedPhrases.has(phraseId)) {
+            memorizedPhrases.delete(phraseId);
+        } else {
+            memorizedPhrases.add(phraseId);
+        }
+        
+        localStorage.setItem(STORAGE_KEY, JSON.stringify([...memorizedPhrases]));
+        updateMemoryStatus();
+    }
+
+    function updateDisplayMode() {
+        const mode = document.getElementById("displayMode").value;
+        document.querySelectorAll('.memorize-item').forEach(item => {
+            let displayText = "クリックで表示";
+            if (mode === "phrase") {
+                displayText = item.dataset.phrase;
+            } else if (mode === "meaning") {
+                displayText = item.dataset.meaning;
+            } else if (mode === "example") {
+                displayText = item.dataset.example;
+            } else if (mode === "example_meaning") {
+                displayText = item.dataset.exampleMeaning;
+            }
+            item.querySelector(".main-text").textContent = displayText;
+            item.querySelector(".main-text").dataset.current = mode;
+            item.querySelector(".reveal-text").style.display = "none";
+        });
+    }
+
+    function toggleReveal(element) {
+        const card = element.closest('.memorize-item');
+        const currentMode = element.querySelector(".main-text").dataset.current;
+        const revealElement = card.querySelector(".reveal-text");
+
+        let revealText = "";
+        if (currentMode === "phrase") {
+            revealText = card.dataset.meaning;
+        } else if (currentMode === "meaning") {
+            revealText = card.dataset.phrase;
+        } else if (currentMode === "example") {
+            revealText = card.dataset.exampleMeaning;
+        } else if (currentMode === "example_meaning") {
+            revealText = card.dataset.example;
+        }
+
+        if (revealElement.style.display === "none") {
+            revealElement.textContent = revealText;
+            revealElement.style.display = "block";
+            element.style.backgroundColor = "#e9ecef";
+        } else {
+            revealElement.style.display = "none";
+            element.style.backgroundColor = "#f8f9fa";
+        }
+    }
+
+    // 初期化
+    document.addEventListener("DOMContentLoaded", () => {
+        updateDisplayMode();
+        updateMemoryStatus();
+    });
+</script>
+{% endblock %}

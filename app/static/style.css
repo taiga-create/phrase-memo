@@ -1,0 +1,100 @@
+/* Google Fonts 読み込み（base.htmlにhead追加） */
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&display=swap');
+
+/* 全体のスタイル */
+body {
+    font-family: 'Noto Sans JP', sans-serif;
+    background-color: #f7f7f8;
+    color: #1e1e1e;
+    margin: 40px auto;
+    max-width: 960px;
+    padding: 0 20px;
+}
+
+/* ヘッダー */
+h1, h2, h3 {
+    font-weight: 500;
+    margin-bottom: 20px;
+}
+
+/* フォーム */
+form input[type="text"],
+form textarea,
+form select {
+    width: 100%;
+    padding: 10px 12px;
+    font-size: 16px;
+    border: 1px solid #ccc;
+    border-radius: 6px;
+    background: white;
+    margin-bottom: 16px;
+}
+
+form button,
+.btn {
+    padding: 10px 20px;
+    font-size: 15px;
+    background-color: #2f3437;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+}
+
+form button:hover,
+.btn:hover {
+    background-color: #404649;
+}
+
+/* リスト表示用カード */
+.card-list {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.card {
+    background: white;
+    padding: 16px 20px;
+    border: 1px solid #e0e0e0;
+    border-radius: 10px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+}
+
+.card-actions {
+    margin-top: 10px;
+    display: flex;
+    gap: 10px;
+}
+
+/* 検索バー */
+.search-bar {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 20px;
+}
+
+.search-bar input {
+    flex: 1;
+    border-radius: 6px;
+    padding: 8px;
+}
+
+/* ページネーション */
+.pagination {
+    display: flex;
+    justify-content: center;
+    margin-top: 30px;
+    gap: 20px;
+    font-weight: 500;
+}
+
+.pagination a {
+    color: #2f3437;
+    text-decoration: none;
+}
+
+.pagination a:hover {
+    text-decoration: underline;
+}

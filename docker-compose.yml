@@ -1,0 +1,9 @@
+services:
+  web:
+    build: .
+    ports:
+      - "5001:5000"  # ← ここを変更（外部ポートを5001に）
+    volumes:
+      - .:/app
+    environment:
+      - FLASK_DEBUG=1

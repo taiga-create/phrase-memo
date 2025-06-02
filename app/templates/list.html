@@ -1,0 +1,44 @@
+{% extends "base.html" %}
+
+{% block content %}
+<h2>登録済みフレーズ一覧</h2>
+
+<form method="GET" action="{{ url_for('main.list_phrases') }}" class="search-bar">
+    <input type="text" name="q" placeholder="キーワードで検索" value="{{ q }}">
+    <button type="submit" class="btn">検索</button>
+</form>
+
+<div class="card-list">
+    {% for phrase in phrases.items %}
+    <div class="card">
+        <h3>{{ phrase.phrase }}</h3>
+        <p><strong>意味:</strong> {{ phrase.meaning }}</p>
+        {% if phrase.example %}
+        <p><strong>例文:</strong> {{ phrase.example }}</p>
+        <p><strong>例文の意味:</strong> {{ phrase.example_meaning }}</p>
+        {% endif %}
+        <div class="card-actions">
+            <a href="{{ url_for('main.edit_phrase', id=phrase.id) }}" class="btn btn-secondary">編集</a>
+            <form action="{{ url_for('main.delete_phrase', id=phrase.id) }}" method="POST" style="display:inline;" onsubmit="return confirm('本当に削除しますか？');">
+                <button type="submit" class="btn btn-danger">削除</button>
+            </form>
+        </div>
+    </div>
+    {% else %}
+    <p>登録されたフレーズはありません。</p>
+    {% endfor %}
+</div>
+
+<!-- ページネーションリンク -->
+<div class="pagination">
+    {% if phrases.has_prev %}
+        <a href="{{ url_for('main.list_phrases', page=phrases.prev_num, q=q) }}">« 前へ</a>
+    {% endif %}
+
+    <span>ページ {{ phrases.page }} / {{ phrases.pages }}</span>
+
+    {% if phrases.has_next %}
+        <a href="{{ url_for('main.list_phrases', page=phrases.next_num, q=q) }}">次へ »</a>
+    {% endif %}
+</div>
+{% endblock %}

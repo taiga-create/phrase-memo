@@ -1,0 +1,21 @@
+<!-- app/templates/edit.html -->
+{% extends "base.html" %}
+
+{% block content %}
+<h1>フレーズを編集</h1>
+<form method="POST">
+    <label>英語フレーズ:</label><br>
+    <input type="text" name="phrase" value="{{ phrase.phrase }}" required><br><br>
+
+    <label>意味:</label><br>
+    <input type="text" name="meaning" value="{{ phrase.meaning }}" required><br><br>
+
+    <label>例文:</label><br>
+    <input type="text" name="example" value="{{ phrase.example }}"><br><br>
+
+    <label>例文の意味:</label><br>
+    <input type="text" name="example_meaning" value="{{ phrase.example_meaning }}"><br><br>
+
+    <input type="submit" value="更新">
+</form>
+{% endblock %}

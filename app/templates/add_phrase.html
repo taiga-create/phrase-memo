@@ -1,0 +1,173 @@
+{% extends "base.html" %}
+
+{% block content %}
+<h2>フレーズ登録</h2>
+
+<div class="add-phrase-form">
+    <div class="form-group">
+        <label for="phrase">フレーズ:</label>
+        <input type="text" id="phrase" class="form-control" placeholder="英語フレーズを入力">
+        <button onclick="suggestTranslation()" class="suggest-btn" id="suggestBtn">
+            意味と例文を自動生成
+        </button>
+    </div>
+
+    <div class="form-group">
+        <label for="meaning">意味:</label>
+        <textarea id="meaning" class="form-control" rows="2" placeholder="日本語の意味"></textarea>
+    </div>
+
+    <div class="form-group">
+        <label for="example">例文:</label>
+        <textarea id="example" class="form-control" rows="2" placeholder="英語の例文"></textarea>
+    </div>
+
+    <div class="form-group">
+        <label for="example_meaning">例文の意味:</label>
+        <textarea id="example_meaning" class="form-control" rows="2" placeholder="例文の日本語訳"></textarea>
+    </div>
+
+    <button onclick="savePhrase()" class="save-btn">保存</button>
+</div>
+
+<style>
+.add-phrase-form {
+    max-width: 600px;
+    margin: 0 auto;
+    padding: 20px;
+}
+
+.form-group {
+    margin-bottom: 20px;
+}
+
+.form-control {
+    width: 100%;
+    padding: 8px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-size: 16px;
+}
+
+.suggest-btn {
+    margin-top: 10px;
+    padding: 8px 16px;
+    background-color: #4CAF50;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background-color 0.3s;
+}
+
+.suggest-btn:hover {
+    background-color: #45a049;
+}
+
+.suggest-btn:disabled {
+    background-color: #cccccc;
+    cursor: not-allowed;
+}
+
+.save-btn {
+    padding: 10px 20px;
+    background-color: #007bff;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background-color 0.3s;
+}
+
+.save-btn:hover {
+    background-color: #0056b3;
+}
+
+#loading {
+    display: none;
+    margin-left: 10px;
+}
+</style>
+
+<script>
+async function suggestTranslation() {
+    const phrase = document.getElementById('phrase').value.trim();
+    if (!phrase) {
+        alert('フレーズを入力してください');
+        return;
+    }
+
+    const suggestBtn = document.getElementById('suggestBtn');
+    suggestBtn.disabled = true;
+    suggestBtn.textContent = '生成中...';
+
+    try {
+        const response = await fetch('/api/suggest', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ phrase: phrase })
+        });
+
+        if (!response.ok) {
+            throw new Error('API request failed');
+        }
+
+        const data = await response.json();
+        
+        document.getElementById('meaning').value = data.meaning;
+        document.getElementById('example').value = data.example;
+        document.getElementById('example_meaning').value = data.example_meaning;
+    } catch (error) {
+        console.error('Error:', error);
+        alert('サジェストの取得に失敗しました');
+    } finally {
+        suggestBtn.disabled = false;
+        suggestBtn.textContent = '意味と例文を自動生成';
+    }
+}
+
+async function savePhrase() {
+    const phrase = document.getElementById('phrase').value.trim();
+    const meaning = document.getElementById('meaning').value.trim();
+    const example = document.getElementById('example').value.trim();
+    const example_meaning = document.getElementById('example_meaning').value.trim();
+
+    if (!phrase || !meaning) {
+        alert('フレーズと意味は必須です');
+        return;
+    }
+
+    try {
+        const response = await fetch('/api/phrases', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                phrase,
+                meaning,
+                example,
+                example_meaning
+            })
+        });
+
+        if (!response.ok) {
+            throw new Error('Failed to save phrase');
+        }
+
+        // 保存成功後、フォームをクリア
+        document.getElementById('phrase').value = '';
+        document.getElementById('meaning').value = '';
+        document.getElementById('example').value = '';
+        document.getElementById('example_meaning').value = '';
+
+        alert('フレーズを保存しました');
+    } catch (error) {
+        console.error('Error:', error);
+        alert('フレーズの保存に失敗しました');
+    }
+}
+</script>
+{% endblock %} 

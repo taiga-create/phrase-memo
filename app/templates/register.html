@@ -1,0 +1,31 @@
+{% extends "base.html" %}
+
+{% block content %}
+<h2>英語フレーズを登録</h2>
+
+<form method="POST" class="form-container">
+    <div class="form-field">
+        <label for="phrase">英語フレーズ</label>
+        <input type="text" name="phrase" id="phrase" required>
+    </div>
+
+    <div class="form-field">
+        <label for="meaning">意味</label>
+        <input type="text" name="meaning" id="meaning" required>
+    </div>
+
+    <div class="form-field">
+        <label for="example">例文</label>
+        <textarea name="example" id="example" rows="3"></textarea>
+    </div>
+
+    <div class="form-field">
+        <label for="example_meaning">例文の意味</label>
+        <textarea name="example_meaning" id="example_meaning" rows="3"></textarea>
+    </div>
+
+    <div class="form-actions">
+        <input type="submit" value="登録" class="btn">
+    </div>
+</form>
+{% endblock %}
