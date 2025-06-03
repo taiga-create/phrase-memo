@@ -3,7 +3,7 @@ from flask_login import login_required, current_user
 from app import db
 from app.models.phrase import Phrase
 from app.models.quiz import QuizResult
-from app.utils.openai_helper import generate_quiz_choices
+from app.utils.openai_helper import evaluate_quiz_answer
 from sqlalchemy.sql import func
 import random
 
@@ -35,25 +35,34 @@ def start_quiz():
     for phrase in phrases:
         if quiz_type == 'english_to_japanese':
             question = phrase.english
-            correct_answer = phrase.japanese
+            answer = phrase.japanese
         else:
             question = phrase.japanese
-            correct_answer = phrase.english
-        
-        # 選択肢を生成
-        choices_data = generate_quiz_choices(correct_answer, quiz_type)
+            answer = phrase.english
         
         questions.append({
             'id': phrase.id,
             'question': question,
-            'choices': choices_data['choices'],
-            'correct_index': choices_data['correct_index']
+            'answer': answer
         })
     
     return jsonify({
         'questions': questions,
         'quiz_type': quiz_type
     })
+
+@quiz_bp.route('/api/quiz/check', methods=['POST'])
+@login_required
+def check_answer():
+    data = request.json
+    user_answer = data.get('answer', '')
+    correct_answer = data.get('correct_answer', '')
+    quiz_type = data.get('quiz_type', 'english_to_japanese')
+    
+    # 回答を評価
+    result = evaluate_quiz_answer(user_answer, correct_answer, quiz_type)
+    
+    return jsonify(result)
 
 @quiz_bp.route('/api/quiz/submit', methods=['POST'])
 @login_required

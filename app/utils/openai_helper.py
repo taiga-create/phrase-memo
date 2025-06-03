@@ -152,4 +152,83 @@ def generate_quiz_choices(correct_answer, quiz_type='english_to_japanese'):
                 correct_answer
             ],
             'correct_index': 3
+        }
+
+def evaluate_quiz_answer(user_answer, correct_answer, quiz_type='english_to_japanese'):
+    """ユーザーの回答を評価し、意味的な正誤判定を行います"""
+    client = OpenAI(api_key=current_app.config['OPENAI_API_KEY'])
+    
+    if quiz_type == 'english_to_japanese':
+        prompt = f"""
+以下の日本語の回答が意味的に正解と一致しているか判定してください：
+
+正解: {correct_answer}
+ユーザーの回答: {user_answer}
+
+判定基準：
+1. 完全一致でなくても、意味が同じであれば正解とする
+2. 助詞の違いは無視する
+3. 同じ意味の類義語は正解とする
+4. 敬語と普通体の違いは許容する
+5. 明らかな誤訳や意味の取り違えは不正解とする
+
+回答は以下の形式で：
+{{
+    "is_correct": true/false,
+    "explanation": "判定理由の説明",
+    "feedback": "学習者へのフィードバック"
+}}
+"""
+    else:  # japanese_to_english
+        prompt = f"""
+以下の英語の回答が意味的に正解と一致しているか判定してください：
+
+正解: {correct_answer}
+ユーザーの回答: {user_answer}
+
+判定基準：
+1. 完全一致でなくても、意味が同じであれば正解とする
+2. 冠詞(a/an/the)の有無や違いは無視する
+3. 同じ意味の類義語は正解とする
+4. 単数形/複数形の違いは文脈に矛盾がなければ許容する
+5. スペルミスは軽微であれば許容する
+6. 明らかな文法ミスや意味の取り違えは不正解とする
+
+回答は以下の形式で：
+{{
+    "is_correct": true/false,
+    "explanation": "判定理由の説明",
+    "feedback": "学習者へのフィードバック"
+}}
+"""
+    
+    try:
+        response = client.chat.completions.create(
+            model="gpt-3.5-turbo",
+            messages=[
+                {"role": "system", "content": "あなたは英語学習の評価を行うエキスパートです。"},
+                {"role": "user", "content": prompt}
+            ],
+            temperature=0.3  # 判定の一貫性を保つため、低めの温度を設定
+        )
+        
+        content = response.choices[0].message.content
+        
+        import json
+        try:
+            result = json.loads(content)
+            return result
+        except json.JSONDecodeError:
+            return {
+                "is_correct": False,
+                "explanation": "回答の評価中にエラーが発生しました",
+                "feedback": "申し訳ありません。もう一度お試しください。"
+            }
+            
+    except Exception as e:
+        print(f"OpenAI API Error: {str(e)}")
+        return {
+            "is_correct": False,
+            "explanation": "回答の評価中にエラーが発生しました",
+            "feedback": "申し訳ありません。もう一度お試しください。"
         } 

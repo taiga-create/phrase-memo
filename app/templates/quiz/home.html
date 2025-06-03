@@ -2,18 +2,41 @@
 
 {% block content %}
 <div class="quiz-container">
-    <div id="quiz-setup" class="quiz-section">
-        <h1>クイズモード</h1>
-        <div class="quiz-options">
-            <div class="option-group">
-                <label>クイズの種類：</label>
-                <select id="quiz-type">
-                    <option value="english_to_japanese">英語→日本語</option>
-                    <option value="japanese_to_english">日本語→英語</option>
-                </select>
+    <div class="mode-selection" id="mode-selection">
+        <h1 class="mode-title">クイズモードを選択</h1>
+        <div class="mode-cards">
+            <div class="mode-card" data-type="english_to_japanese">
+                <div class="mode-icon">🇺🇸 → 🇯🇵</div>
+                <h2>英語 → 日本語</h2>
+                <p>英語のフレーズを日本語に訳す</p>
+                <div class="mode-example">
+                    <div class="example-text">take it easy</div>
+                    <div class="example-arrow">↓</div>
+                    <div class="example-text">気楽にやる</div>
+                </div>
             </div>
-            
-            <div class="option-group">
+            <div class="mode-card" data-type="japanese_to_english">
+                <div class="mode-icon">🇯🇵 → 🇺🇸</div>
+                <h2>日本語 → 英語</h2>
+                <p>日本語のフレーズを英語に訳す</p>
+                <div class="mode-example">
+                    <div class="example-text">気楽にやる</div>
+                    <div class="example-arrow">↓</div>
+                    <div class="example-text">take it easy</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="quiz-settings" style="display: none;">
+        <div class="settings-header">
+            <button class="btn-back" id="back-to-modes">
+                <span class="back-arrow">←</span> モード選択に戻る
+            </button>
+            <h2 class="settings-title">クイズ設定</h2>
+        </div>
+        <div class="settings-panel">
+            <div class="setting-group">
                 <label>問題数：</label>
                 <select id="question-count">
                     <option value="5">5問</option>
@@ -21,12 +44,11 @@
                     <option value="20">20問</option>
                 </select>
             </div>
-            
             <button id="start-quiz" class="btn-primary">クイズを開始</button>
         </div>
     </div>
     
-    <div id="quiz-progress" class="quiz-section" style="display: none;">
+    <div class="quiz-area" style="display: none;">
         <div class="progress-header">
             <div class="question-counter">
                 Question <span id="current-question">1</span>/<span id="total-questions">10</span>
@@ -36,16 +58,25 @@
             </div>
         </div>
         
-        <div class="question-container">
+        <div class="question-card">
             <div class="question-text" id="question"></div>
-            
-            <div class="choices-container" id="choices">
-                <!-- 選択肢がここに動的に追加されます -->
+            <div class="answer-section">
+                <input type="text" id="answer-input" class="answer-input" placeholder="答えを入力してください">
+                <button id="submit-answer" class="btn-primary">回答する</button>
             </div>
+        </div>
+        
+        <div class="feedback-area" style="display: none;">
+            <div class="feedback-content">
+                <div class="feedback-result"></div>
+                <div class="feedback-message"></div>
+                <div class="correct-answer"></div>
+            </div>
+            <button id="next-question" class="btn-secondary">次の問題へ</button>
         </div>
     </div>
     
-    <div id="quiz-result" class="quiz-section" style="display: none;">
+    <div class="result-area" style="display: none;">
         <h2>クイズ結果</h2>
         <div class="result-content">
             <div class="score-circle">
@@ -67,39 +98,124 @@
     padding: 0 1rem;
 }
 
-.quiz-section {
-    background: white;
-    border-radius: 8px;
-    padding: 2rem;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-}
-
-.quiz-section h1 {
+.mode-title {
     text-align: center;
-    margin-bottom: 2rem;
     color: #333;
+    margin-bottom: 2rem;
+    font-size: 2rem;
 }
 
-.quiz-options {
+.mode-cards {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 2rem;
+    margin-bottom: 2rem;
+}
+
+.mode-card {
+    background: white;
+    border-radius: 12px;
+    padding: 2rem;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    cursor: pointer;
+    transition: transform 0.3s, box-shadow 0.3s;
+    text-align: center;
+}
+
+.mode-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+}
+
+.mode-icon {
+    font-size: 2.5rem;
+    margin-bottom: 1rem;
+}
+
+.mode-card h2 {
+    color: #333;
+    margin-bottom: 0.5rem;
+    font-size: 1.5rem;
+}
+
+.mode-card p {
+    color: #666;
+    margin-bottom: 1.5rem;
+}
+
+.mode-example {
+    background: #f8f9fa;
+    padding: 1rem;
+    border-radius: 8px;
+}
+
+.example-text {
+    font-size: 1.1rem;
+    color: #4a90e2;
+}
+
+.example-arrow {
+    color: #666;
+    margin: 0.5rem 0;
+}
+
+.quiz-settings {
+    background: white;
+    border-radius: 12px;
+    padding: 2rem;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.settings-header {
+    display: flex;
+    align-items: center;
+    margin-bottom: 2rem;
+    gap: 1rem;
+}
+
+.btn-back {
+    background: none;
+    border: none;
+    color: #4a90e2;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 1rem;
+    padding: 0.5rem;
+    transition: color 0.3s;
+}
+
+.btn-back:hover {
+    color: #357abd;
+}
+
+.back-arrow {
+    font-size: 1.2rem;
+}
+
+.settings-title {
+    margin: 0;
+    color: #333;
+    flex: 1;
+    text-align: center;
+}
+
+.settings-panel {
     display: flex;
     flex-direction: column;
     gap: 1.5rem;
     align-items: center;
 }
 
-.option-group {
+.setting-group {
     display: flex;
-    gap: 1rem;
     align-items: center;
+    gap: 1rem;
 }
 
-.option-group label {
-    min-width: 100px;
-    color: #666;
-}
-
-.option-group select {
-    padding: 0.5rem;
+.setting-group select {
+    padding: 0.75rem;
     border: 1px solid #ddd;
     border-radius: 4px;
     font-size: 1rem;
@@ -125,53 +241,76 @@
     font-weight: 500;
 }
 
-.question-container {
-    text-align: center;
+.question-card {
+    background: white;
+    padding: 2rem;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    margin-bottom: 2rem;
 }
 
 .question-text {
-    font-size: 1.5rem;
-    margin-bottom: 2rem;
+    font-size: 1.8rem;
     color: #333;
+    margin-bottom: 2rem;
+    text-align: center;
 }
 
-.choices-container {
-    display: grid;
+.answer-section {
+    display: flex;
     gap: 1rem;
-    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    max-width: 600px;
+    margin: 0 auto;
 }
 
-.choice-button {
-    padding: 1rem;
-    border: 2px solid #ddd;
-    border-radius: 8px;
-    background: white;
-    cursor: pointer;
+.answer-input {
+    flex: 1;
+    padding: 0.75rem;
     font-size: 1rem;
-    transition: all 0.3s;
+    border: 2px solid #ddd;
+    border-radius: 4px;
+    transition: border-color 0.3s;
 }
 
-.choice-button:hover {
+.answer-input:focus {
+    outline: none;
     border-color: #4a90e2;
-    transform: translateY(-2px);
 }
 
-.choice-button.correct {
-    background-color: #d4edda;
-    border-color: #28a745;
-    color: #155724;
+.feedback-area {
+    background: white;
+    padding: 1.5rem;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    margin-bottom: 2rem;
 }
 
-.choice-button.incorrect {
-    background-color: #f8d7da;
-    border-color: #dc3545;
-    color: #721c24;
+.feedback-content {
+    margin-bottom: 1.5rem;
 }
 
-.choice-button.disabled {
-    opacity: 0.7;
-    cursor: not-allowed;
-    transform: none;
+.feedback-result {
+    font-size: 1.2rem;
+    font-weight: 500;
+    margin-bottom: 0.5rem;
+}
+
+.feedback-result.correct {
+    color: #28a745;
+}
+
+.feedback-result.incorrect {
+    color: #dc3545;
+}
+
+.feedback-message {
+    color: #666;
+    margin-bottom: 0.5rem;
+}
+
+.correct-answer {
+    color: #28a745;
+    font-weight: 500;
 }
 
 .result-content {
@@ -212,26 +351,42 @@
     color: white;
     border: none;
     border-radius: 4px;
-    font-size: 1rem;
     cursor: pointer;
+    font-size: 1rem;
     transition: background-color 0.3s;
 }
 
-.btn-primary:hover {
-    background: #357abd;
+.btn-secondary {
+    padding: 0.75rem 2rem;
+    background: #6c757d;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 1rem;
+    transition: background-color 0.3s;
 }
 
+.btn-primary:hover { background: #357abd; }
+.btn-secondary:hover { background: #5a6268; }
+
 @media (max-width: 768px) {
-    .quiz-section {
-        padding: 1.5rem;
+    .settings-panel {
+        flex-direction: column;
+        align-items: stretch;
+    }
+    
+    .setting-group {
+        flex-direction: column;
+        align-items: stretch;
+    }
+    
+    .answer-section {
+        flex-direction: column;
     }
     
     .question-text {
-        font-size: 1.2rem;
-    }
-    
-    .choices-container {
-        grid-template-columns: 1fr;
+        font-size: 1.5rem;
     }
     
     .score-circle {
@@ -248,30 +403,47 @@
 <script>
 document.addEventListener('DOMContentLoaded', function() {
     let currentQuestions = [];
-    let currentQuestionIndex = 0;
+    let currentIndex = 0;
     let score = 0;
+    let selectedQuizType = '';
     
-    const quizSetup = document.getElementById('quiz-setup');
-    const quizProgress = document.getElementById('quiz-progress');
-    const quizResult = document.getElementById('quiz-result');
+    const modeSelection = document.getElementById('mode-selection');
+    const quizSettings = document.querySelector('.quiz-settings');
+    const modeCards = document.querySelectorAll('.mode-card');
+    const backToModesBtn = document.getElementById('back-to-modes');
+    const questionCount = document.getElementById('question-count');
     const startQuizBtn = document.getElementById('start-quiz');
     const retryQuizBtn = document.getElementById('retry-quiz');
+    const submitAnswerBtn = document.getElementById('submit-answer');
+    const nextQuestionBtn = document.getElementById('next-question');
+    const answerInput = document.getElementById('answer-input');
     
-    startQuizBtn.addEventListener('click', startQuiz);
-    retryQuizBtn.addEventListener('click', showSetup);
+    const quizArea = document.querySelector('.quiz-area');
+    const feedbackArea = document.querySelector('.feedback-area');
+    const resultArea = document.querySelector('.result-area');
+    
+    modeCards.forEach(card => {
+        card.addEventListener('click', function() {
+            selectedQuizType = this.dataset.type;
+            modeSelection.style.display = 'none';
+            quizSettings.style.display = 'block';
+        });
+    });
+    
+    backToModesBtn.addEventListener('click', function() {
+        quizSettings.style.display = 'none';
+        modeSelection.style.display = 'block';
+    });
     
     function startQuiz() {
-        const quizType = document.getElementById('quiz-type').value;
-        const count = document.getElementById('question-count').value;
-        
         fetch('/api/quiz/start', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
             },
             body: JSON.stringify({
-                type: quizType,
-                count: parseInt(count)
+                type: selectedQuizType,
+                count: parseInt(questionCount.value)
             })
         })
         .then(response => response.json())
@@ -282,62 +454,86 @@ document.addEventListener('DOMContentLoaded', function() {
             }
             
             currentQuestions = data.questions;
-            currentQuestionIndex = 0;
+            currentIndex = 0;
             score = 0;
             
             document.getElementById('total-questions').textContent = currentQuestions.length;
             document.getElementById('current-score').textContent = score;
             
-            quizSetup.style.display = 'none';
-            quizProgress.style.display = 'block';
-            quizResult.style.display = 'none';
+            quizSettings.style.display = 'none';
+            quizArea.style.display = 'block';
+            resultArea.style.display = 'none';
             
             showQuestion();
         });
     }
     
     function showQuestion() {
-        const question = currentQuestions[currentQuestionIndex];
-        document.getElementById('current-question').textContent = currentQuestionIndex + 1;
+        const question = currentQuestions[currentIndex];
+        document.getElementById('current-question').textContent = currentIndex + 1;
         document.getElementById('question').textContent = question.question;
         
-        const choicesContainer = document.getElementById('choices');
-        choicesContainer.innerHTML = '';
+        answerInput.value = '';
+        answerInput.focus();
         
-        question.choices.forEach((choice, index) => {
-            const button = document.createElement('button');
-            button.className = 'choice-button';
-            button.textContent = choice;
-            button.addEventListener('click', () => checkAnswer(index));
-            choicesContainer.appendChild(button);
+        feedbackArea.style.display = 'none';
+    }
+    
+    function checkAnswer() {
+        const question = currentQuestions[currentIndex];
+        const userAnswer = answerInput.value.trim();
+        
+        if (!userAnswer) {
+            alert('回答を入力してください');
+            return;
+        }
+        
+        fetch('/api/quiz/check', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                answer: userAnswer,
+                correct_answer: question.answer,
+                quiz_type: selectedQuizType
+            })
+        })
+        .then(response => response.json())
+        .then(result => {
+            const feedbackResult = document.querySelector('.feedback-result');
+            const feedbackMessage = document.querySelector('.feedback-message');
+            const correctAnswer = document.querySelector('.correct-answer');
+            
+            if (result.is_correct) {
+                score++;
+                document.getElementById('current-score').textContent = score;
+                feedbackResult.textContent = '正解！';
+                feedbackResult.className = 'feedback-result correct';
+            } else {
+                feedbackResult.textContent = '不正解';
+                feedbackResult.className = 'feedback-result incorrect';
+            }
+            
+            feedbackMessage.textContent = result.feedback;
+            correctAnswer.textContent = `正解: ${question.answer}`;
+            
+            submitAnswerBtn.disabled = true;
+            answerInput.disabled = true;
+            feedbackArea.style.display = 'block';
         });
     }
     
-    function checkAnswer(selectedIndex) {
-        const question = currentQuestions[currentQuestionIndex];
-        const buttons = document.querySelectorAll('.choice-button');
+    function nextQuestion() {
+        currentIndex++;
+        submitAnswerBtn.disabled = false;
+        answerInput.disabled = false;
         
-        buttons.forEach(button => {
-            button.classList.add('disabled');
-        });
-        
-        if (selectedIndex === question.correct_index) {
-            score++;
-            document.getElementById('current-score').textContent = score;
-            buttons[selectedIndex].classList.add('correct');
+        if (currentIndex < currentQuestions.length) {
+            showQuestion();
         } else {
-            buttons[selectedIndex].classList.add('incorrect');
-            buttons[question.correct_index].classList.add('correct');
+            showResult();
         }
-        
-        setTimeout(() => {
-            currentQuestionIndex++;
-            if (currentQuestionIndex < currentQuestions.length) {
-                showQuestion();
-            } else {
-                showResult();
-            }
-        }, 1500);
     }
     
     function showResult() {
@@ -347,10 +543,9 @@ document.addEventListener('DOMContentLoaded', function() {
         document.getElementById('correct-answers').textContent = score;
         document.getElementById('total-answered').textContent = currentQuestions.length;
         
-        quizProgress.style.display = 'none';
-        quizResult.style.display = 'block';
+        quizArea.style.display = 'none';
+        resultArea.style.display = 'block';
         
-        // 結果を保存
         fetch('/api/quiz/submit', {
             method: 'POST',
             headers: {
@@ -359,16 +554,26 @@ document.addEventListener('DOMContentLoaded', function() {
             body: JSON.stringify({
                 score: score,
                 total_questions: currentQuestions.length,
-                quiz_type: document.getElementById('quiz-type').value
+                quiz_type: selectedQuizType
             })
         });
     }
     
-    function showSetup() {
-        quizSetup.style.display = 'block';
-        quizProgress.style.display = 'none';
-        quizResult.style.display = 'none';
+    function retryQuiz() {
+        modeSelection.style.display = 'block';
+        resultArea.style.display = 'none';
     }
+    
+    startQuizBtn.addEventListener('click', startQuiz);
+    submitAnswerBtn.addEventListener('click', checkAnswer);
+    nextQuestionBtn.addEventListener('click', nextQuestion);
+    retryQuizBtn.addEventListener('click', retryQuiz);
+    
+    answerInput.addEventListener('keypress', function(e) {
+        if (e.key === 'Enter' && !submitAnswerBtn.disabled) {
+            checkAnswer();
+        }
+    });
 });
 </script>
 {% endblock %} 
